@@ -1,0 +1,7 @@
+node_modules/
+.vite/
+out/
+data/
+.llm/
+.DS_Store
+*.tsbuildinfo
