@@ -8,7 +8,8 @@
   "scripts": {
     "dev": "electron-forge start",
     "package": "electron-forge package",
-    "make": "electron-forge make",
+    "make": "sh scripts/make.sh",
+    "publish": "sh scripts/publish.sh",
     "typecheck": "tsc --noEmit",
     "lint": "biome lint",
     "format": "biome format --write"
