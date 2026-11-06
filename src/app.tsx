@@ -8,7 +8,7 @@ type Release = Extract<ReleaseList, { ok: true }>["releases"][number];
 type Progress = Parameters<Parameters<typeof window.electronAPI.updates.onProgress>[0]>[0];
 
 // Change this line at every release: the visible proof that the update took.
-const WHATS_NEW = "Third version: the launch check stays silent offline.";
+const WHATS_NEW = "Fourth version: installed in green, newer in blue.";
 
 // Each version gets its own color, derived from its number, so a new version is seen at a glance.
 function versionHue(version: string): number {
@@ -16,6 +16,16 @@ function versionHue(version: string): number {
   for (const char of version) hash = (hash * 31 + char.charCodeAt(0)) % 360;
   return hash;
 }
+
+// GitHub's dark-theme green and blue: the installed version, and the versions newer than it.
+const BADGES: Partial<Record<Release["relation"], { label: string; className: string }>> = {
+  current: { label: "Installed", className: "border-[#238636] text-[#3fb950]" },
+  newer: { label: "New", className: "border-[#1f6feb] text-[#58a6ff]" },
+};
+const ROW_ACCENTS: Partial<Record<Release["relation"], string>> = {
+  current: "border-l-[#3fb950]",
+  newer: "border-l-[#58a6ff]",
+};
 
 function megabytes(bytes: number): string {
   return `${(bytes / 1_000_000).toFixed(1)} MB`;
@@ -136,14 +146,21 @@ export function App(): ReactElement {
           {list?.ok && !list.canInstall && (
             <span className="text-sm text-muted-foreground">{list.reason}</span>
           )}
-          <ul className="flex flex-col divide-y rounded-xl border">
+          <ul className="flex flex-col divide-y overflow-hidden rounded-xl border">
             {releases.map((release) => (
-              <li key={release.tag} className="flex items-center justify-between gap-4 px-4 py-3">
+              <li
+                key={release.tag}
+                className={`flex items-center justify-between gap-4 border-l-4 px-4 py-3 ${ROW_ACCENTS[release.relation] ?? "border-l-transparent"}`}
+              >
                 <div className="flex flex-col">
                   <span className="font-medium">
                     {release.tag}
-                    {release.relation === "current" && (
-                      <span className="ml-2 text-xs text-muted-foreground">installed</span>
+                    {BADGES[release.relation] && (
+                      <span
+                        className={`ml-2 rounded-full border px-2 py-0.5 text-xs ${BADGES[release.relation]?.className}`}
+                      >
+                        {BADGES[release.relation]?.label}
+                      </span>
                     )}
                   </span>
                   <span className="text-xs text-muted-foreground">
