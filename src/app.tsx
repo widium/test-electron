@@ -8,7 +8,7 @@ type Release = Extract<ReleaseList, { ok: true }>["releases"][number];
 type Progress = Parameters<Parameters<typeof window.electronAPI.updates.onProgress>[0]>[0];
 
 // Change this line at every release: the visible proof that the update took.
-const WHATS_NEW = "Second version: updated from inside the app.";
+const WHATS_NEW = "Third version: the launch check stays silent offline.";
 
 // Each version gets its own color, derived from its number, so a new version is seen at a glance.
 function versionHue(version: string): number {
@@ -42,10 +42,12 @@ export function App(): ReactElement {
   const [progress, setProgress] = useState<Progress | null>(null);
   const [error, setError] = useState<{ text: string; url?: string } | null>(null);
 
-  const check = useCallback(async (): Promise<void> => {
+  // The launch check stays silent when it fails (offline, rate limit); a manual check always answers.
+  const check = useCallback(async (manual: boolean): Promise<void> => {
     setChecking(true);
-    setList(await window.electronAPI.updates.listReleases());
+    const result = await window.electronAPI.updates.listReleases();
     setChecking(false);
+    if (result.ok || manual) setList(result);
   }, []);
 
   // When the app cannot replace itself, the error carries the release page to open instead.
@@ -62,10 +64,10 @@ export function App(): ReactElement {
 
   useEffect(() => {
     void window.electronAPI.system.getAppInfo().then((info) => setVersion(info.version));
-    void check();
+    void check(false);
   }, [check]);
 
-  useEffect(() => window.electronAPI.menu.onCheckForUpdates(() => void check()), [check]);
+  useEffect(() => window.electronAPI.menu.onCheckForUpdates(() => void check(true)), [check]);
   useEffect(() => window.electronAPI.updates.onProgress(setProgress), []);
   // Nothing is ever pending: acknowledge at once.
   useEffect(
@@ -123,7 +125,7 @@ export function App(): ReactElement {
 
         <section className="flex flex-col gap-3">
           <div className="flex items-center gap-3">
-            <Button variant="outline" onClick={() => void check()} disabled={checking}>
+            <Button variant="outline" onClick={() => void check(true)} disabled={checking}>
               {checking ? "Checking…" : "Check for updates"}
             </Button>
             {list?.ok && latest?.relation !== "newer" && !checking && (
