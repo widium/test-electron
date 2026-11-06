@@ -8,7 +8,7 @@ type Release = Extract<ReleaseList, { ok: true }>["releases"][number];
 type Progress = Parameters<Parameters<typeof window.electronAPI.updates.onProgress>[0]>[0];
 
 // Change this line at every release: the visible proof that the update took.
-const WHATS_NEW = "First version with the in-app updater.";
+const WHATS_NEW = "Second version: updated from inside the app.";
 
 // Each version gets its own color, derived from its number, so a new version is seen at a glance.
 function versionHue(version: string): number {
