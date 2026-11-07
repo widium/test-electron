@@ -4,7 +4,7 @@ import { WindowTitleBar } from "@/components/layouts/window-title-bar";
 import { VersioningPanel } from "@/components/versioning/versioning-panel";
 
 // Change this line at every release: the visible proof that the update took.
-const WHATS_NEW = "Seventh version: versioning rebuilt clean.";
+const WHATS_NEW = "Eighth version: updated from the app.";
 
 // Each version gets its own color, derived from its number, so a new version is seen at a glance.
 function versionHue(version: string): number {
