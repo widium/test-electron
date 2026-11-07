@@ -2,56 +2,38 @@
 set -eu
 cd "$(dirname "$0")/.."
 
-asset="TestElectron-darwin-arm64.dmg"
-build="out/make/build.env"
+version="${1:-}"
+tag="v$version"
+
+step() {
+  printf '\n→ %s\n' "$1"
+}
 
 fail() {
   printf '✗ %s\n' "$1" >&2
   exit 1
 }
 
-done_step() {
-  printf '✓ %s\n' "$1"
-}
+[ -n "$version" ] || fail "Give the version: npm run publish -- <x.y.z>"
+[ -z "$(git status --porcelain)" ] || fail "Uncommitted changes: commit them first."
 
-[ -f "$build" ] || fail "Nothing built yet: run npm run make first."
-. "./$build"
-tag="v$VERSION"
-head="$(git rev-parse HEAD)"
+# The tag already on the current commit means an earlier publish stopped after tagging: resume.
+if [ "$(git rev-parse -q --verify "refs/tags/$tag^{commit}" || true)" != "$(git rev-parse HEAD)" ]; then
+  current="$(node -p 'require("./package.json").version')"
+  highest="$(printf '%s\n%s\n' "$current" "$version" | sort -V | tail -n 1)"
+  if [ "$version" = "$current" ] || [ "$highest" != "$version" ]; then
+    fail "$version is not above the current version $current."
+  fi
+  step "Version $version"
+  npm version "$version"
+  git push --follow-tags
+fi
 
-printf 'Publishing %s\n' "$tag"
-[ -z "$(git status --porcelain)" ] || fail "Uncommitted changes: commit them, then npm run make again."
-[ "$COMMIT" = "$head" ] || fail "The DMG was not built from the current commit: run npm run make again."
-done_step "DMG built from the current commit ($(git rev-parse --short HEAD))"
+# Forge builds the DMG and uploads it to a draft release, invisible to the app and install.sh
+# until the DMG is complete.
+step "Build and upload"
+GITHUB_TOKEN="$(gh auth token)" electron-forge publish
 
-repo="$(gh repo view --json nameWithOwner -q .nameWithOwner)"
-if gh release view "$tag" >/dev/null 2>&1; then fail "$tag is already released."; fi
-done_step "$tag is not released yet"
-
-git push -q origin HEAD
-if ! git rev-parse -q --verify "refs/tags/$tag" >/dev/null; then git tag "$tag"; fi
-[ "$(git rev-list -n 1 "$tag")" = "$head" ] || fail "Tag $tag already points to another commit."
-git push -q origin "$tag"
-done_step "Pushed $(git branch --show-current) and tag $tag"
-
-# The release stays a draft until its DMG is fully uploaded: the app and install.sh never see a
-# release without its DMG. A failed upload deletes the draft, so publish can simply run again.
-release_id="$(gh api -X POST "repos/$repo/releases" -f tag_name="$tag" -f name="$tag" \
-  -F draft=true -F generate_release_notes=true --jq .id)"
-published=""
-discard_draft() {
-  [ -n "$published" ] || gh api -X DELETE "repos/$repo/releases/$release_id" >/dev/null 2>&1 || true
-}
-trap discard_draft EXIT
-
-printf 'Uploading %s (%s MB)\n' "$asset" "$(($(stat -f %z "$DMG") / 1000000))"
-curl --fail --progress-bar -o /dev/null -X POST -T "$DMG" \
-  -H "Authorization: Bearer $(gh auth token)" \
-  -H "Content-Type: application/x-apple-diskimage" \
-  "https://uploads.github.com/repos/$repo/releases/$release_id/assets?name=$asset" ||
-  fail "Upload failed: the draft is deleted, run npm run publish again."
-done_step "Uploaded"
-
-url="$(gh api -X PATCH "repos/$repo/releases/$release_id" -F draft=false --jq .html_url)"
-published="yes"
-done_step "Released: $url"
+step "Release"
+gh release edit "$tag" --draft=false >/dev/null
+printf '✓ Released: %s\n' "$(gh release view "$tag" --json url -q .url)"

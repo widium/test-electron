@@ -6,6 +6,7 @@ import { FuseV1Options, FuseVersion } from "@electron/fuses";
 import { MakerDMG } from "@electron-forge/maker-dmg";
 import { FusesPlugin } from "@electron-forge/plugin-fuses";
 import { VitePlugin } from "@electron-forge/plugin-vite";
+import { PublisherGitHub } from "@electron-forge/publisher-github";
 import type { ForgeConfig } from "@electron-forge/shared-types";
 
 const run = promisify(execFile);
@@ -33,7 +34,15 @@ const config: ForgeConfig = {
       }
     },
   },
-  makers: [new MakerDMG({})],
+  // A fixed file name: install.sh and the in-app updater download the DMG by this name.
+  makers: [new MakerDMG({ name: "TestElectron-darwin-arm64", title: "Test Electron" })],
+  publishers: [
+    new PublisherGitHub({
+      repository: { owner: "widium", name: "test-electron" },
+      draft: true,
+      generateReleaseNotes: true,
+    }),
+  ],
   plugins: [
     new VitePlugin({
       build: [
