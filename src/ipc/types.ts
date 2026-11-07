@@ -1,8 +1,8 @@
 import type * as system from "./handlers/system";
-import type * as updates from "./handlers/updates";
 import type { MenuEvents } from "./handlers/menu";
 import type { SystemEvents } from "./handlers/system";
-import type { UpdatesEvents } from "./handlers/updates";
+import type * as versioning from "./handlers/versioning";
+import type { VersioningEvents } from "./handlers/versioning";
 
 // Over IPC every call is async. A generator streams through push events, so its call resolves to nothing.
 type ApiFunction<T> = T extends (...args: infer Args) => AsyncGenerator<unknown, unknown, unknown>
@@ -25,7 +25,7 @@ export interface AppEvents {
 // What the main calls itself is omitted: the omission is what keeps it out of the renderer's reach.
 export interface ElectronAPI {
   system: ApiModuleWithEvents<typeof system, SystemEvents, "createMainWindow" | "watchNativeTheme">;
-  updates: ApiModuleWithEvents<typeof updates, UpdatesEvents>;
+  versioning: ApiModuleWithEvents<typeof versioning, VersioningEvents>;
   menu: MenuEvents;
   app: AppEvents;
 }

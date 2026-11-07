@@ -9,12 +9,14 @@ import { VitePlugin } from "@electron-forge/plugin-vite";
 import { PublisherGitHub } from "@electron-forge/publisher-github";
 import type { ForgeConfig } from "@electron-forge/shared-types";
 
+import { VERSIONING } from "./versioning/config.ts";
+
 const run = promisify(execFile);
 
 const config: ForgeConfig = {
   packagerConfig: {
     asar: true,
-    appBundleId: "com.bidium.test-electron",
+    appBundleId: VERSIONING.bundleId,
   },
   hooks: {
     // Flipping fuses invalidates the signature, and an unsigned arm64 binary does not run:
@@ -35,10 +37,10 @@ const config: ForgeConfig = {
     },
   },
   // A fixed file name: install.sh and the in-app updater download the DMG by this name.
-  makers: [new MakerDMG({ name: "TestElectron-darwin-arm64", title: "Test Electron" })],
+  makers: [new MakerDMG({ name: VERSIONING.dmgName, title: "Test Electron" })],
   publishers: [
     new PublisherGitHub({
-      repository: { owner: "widium", name: "test-electron" },
+      repository: VERSIONING.repository,
       draft: true,
       generateReleaseNotes: true,
     }),

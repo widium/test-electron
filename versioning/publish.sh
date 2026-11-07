@@ -26,13 +26,17 @@ if [ "$(git rev-parse -q --verify "refs/tags/$tag^{commit}" || true)" != "$(git 
   fi
   step "Version $version"
   npm version "$version"
-  git push --follow-tags
 fi
+
+# Pushed on every run, a resumed one included: Forge creates the release on the pushed tag, and
+# without it GitHub would tag the default branch's tip, without the version commit.
+step "Push"
+git push --follow-tags
 
 # Forge builds the DMG and uploads it to a draft release, invisible to the app and install.sh
 # until the DMG is complete.
 step "Build and upload"
-GITHUB_TOKEN="$(gh auth token)" electron-forge publish
+GITHUB_TOKEN="$(gh auth token)" electron-forge release
 
 step "Release"
 gh release edit "$tag" --draft=false >/dev/null

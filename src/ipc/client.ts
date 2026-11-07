@@ -20,9 +20,10 @@ export function exposeIPC(): void {
       isDarkTheme: () => ipcRenderer.invoke(CHANNELS.isDarkTheme),
       onThemeChange: (callback) => subscribe(CHANNELS.themeChange, callback),
     },
-    updates: {
+    versioning: {
       listReleases: () => ipcRenderer.invoke(CHANNELS.listReleases),
       install: (tag) => ipcRenderer.invoke(CHANNELS.install, tag),
+      lastUpdateFailure: () => ipcRenderer.invoke(CHANNELS.lastUpdateFailure),
       onProgress: (callback) => subscribe(CHANNELS.progress, callback),
     },
     menu: {

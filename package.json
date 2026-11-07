@@ -9,7 +9,7 @@
     "dev": "electron-forge start",
     "package": "electron-forge package",
     "make": "electron-forge make",
-    "publish": "sh scripts/publish.sh",
+    "publish": "sh versioning/publish.sh",
     "typecheck": "tsc --noEmit",
     "lint": "biome lint",
     "format": "biome format --write"

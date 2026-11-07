@@ -5,7 +5,7 @@ A throwaway test bench for releases and in-app updates of an Electron app (macOS
 Install or update:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/widium/test-electron/main/install.sh | sh
+curl -fsSL https://raw.githubusercontent.com/widium/test-electron/main/versioning/install.sh | sh
 ```
 
 Build locally to try the app, then release a version:
